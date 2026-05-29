@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spreedy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        overflow: hidden;
+        background: #ffffff;
+      }
+
+      #toolbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 48px;
+        background: #f5f5f5;
+        border-bottom: 1px solid #d0d0d0;
+        display: flex;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .toolbar-group {
+        display: flex;
+        align-items: center;
+        padding: 0 15px;
+        border-left: 1px solid #d0d0d0;
+      }
+
+      .toolbar-group:last-child {
+        border-left: none;
+      }
+
+      .logo {
+        position: relative;
+        font-size: 30px;
+        font-weight: 300;
+        color: #000;
+        padding: 0 15px;
+        font-family: "Ubuntu", sans-serif;
+        user-select: none;
+        letter-spacing: 0.5px;
+      }
+
+      .logo sup {
+        position: relative;
+        font-size: 20px;
+        font-weight: 700;
+        top: -0.2em;
+      }
+
+      .toolbar-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 4px;
+        transition: background 0.2s;
+        margin-left: auto;
+        border: none;
+        background: transparent;
+      }
+
+      .toolbar-toggle:hover {
+        background: #e0e0e0;
+      }
+
+      .toolbar-toggle .toolbar-icon {
+        transition: transform 0.3s ease;
+      }
+
+      .toolbar-toggle.collapsed .toolbar-icon {
+        transform: rotate(180deg);
+      }
+
+      .toolbar-content {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        transition: max-width 0.3s ease, opacity 0.3s ease;
+        max-width: 2000px;
+        opacity: 1;
+        overflow: hidden;
+      }
+
+      .toolbar-content.collapsed {
+        max-width: 0;
+        opacity: 0;
+      }
+
+      .icon-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 4px;
+        transition: background 0.2s;
+      }
+
+      .icon-button:hover {
+        background: #e0e0e0;
+      }
+
+      .icon-button:active {
+        background: #d0d0d0;
+      }
+
+      .toolbar-icon {
+        width: 22px;
+        height: 22px;
+        color: #111;
+      }
+
+      .font-dropdown {
+        padding: 4px 8px;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        background: white;
+        color: #111;
+        font-size: 13px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        cursor: pointer;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      .font-dropdown:hover {
+        border-color: #1a74e8;
+      }
+
+      .font-dropdown:focus {
+        border-color: #1a74e8;
+      }
+
+      #color-picker,
+      #text-color-picker {
+        position: absolute;
+        width: 0;
+        height: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #canvas-container {
+        width: 100vw;
+        height: calc(100vh - 48px);
+        margin-top: 48px;
+      }
+
+      #cell-input {
+        position: absolute;
+        display: none;
+        border: 2px solid #0066cc;
+        background: white;
+        font-size: 14px;
+        padding: 4px 8px;
+        outline: none;
+        z-index: 1000;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+      }
+
+      canvas {
+        display: block;
+        cursor: default;
+      }
+
+      canvas.grabbing {
+        cursor: grabbing;
+      }
+
+      /* Version Management Modal */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+      }
+
+      .modal-overlay.active {
+        display: flex;
+      }
+
+      .modal {
+        background: white;
+        border-radius: 8px;
+        padding: 24px;
+        min-width: 400px;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .modal-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #111;
+      }
+
+      .modal-close {
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-close:hover {
+        background: #e0e0e0;
+      }
+
+      .modal-content {
+        margin-bottom: 20px;
+      }
+
+      .version-input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        outline: none;
+        margin-bottom: 16px;
+      }
+
+      .version-input:focus {
+        border-color: #1a74e8;
+      }
+
+      .version-list {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        margin-bottom: 16px;
+      }
+
+      .version-item {
+        padding: 12px;
+        border-bottom: 1px solid #e0e0e0;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.2s;
+      }
+
+      .version-item:last-child {
+        border-bottom: none;
+      }
+
+      .version-item:hover {
+        background: #f5f5f5;
+      }
+
+      .version-item.selected {
+        background: #e3f2fd;
+      }
+
+      .version-info {
+        flex: 1;
+      }
+
+      .version-name {
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 4px;
+      }
+
+      .version-date {
+        font-size: 12px;
+        color: #666;
+      }
+
+      .version-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .version-delete {
+        padding: 4px 8px;
+        border: none;
+        background: #f44336;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: background 0.2s;
+      }
+
+      .version-delete:hover {
+        background: #d32f2f;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      }
+
+      .modal-button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+      }
+
+      .modal-button-primary {
+        background: #1a74e8;
+        color: white;
+      }
+
+      .modal-button-primary:hover {
+        background: #1557b0;
+      }
+
+      .modal-button-primary:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .modal-button-secondary {
+        background: #e0e0e0;
+        color: #111;
+      }
+
+      .modal-button-secondary:hover {
+        background: #d0d0d0;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toolbar">
+      <div class="logo">spreedy</div>
+      <div class="toolbar-group">
+        <div class="icon-button" id="save-button" title="Save to Local Storage">
+          <i data-lucide="save" class="toolbar-icon"></i>
+        </div>
+        <div
+          class="icon-button"
+          id="load-button"
+          title="Load from Local Storage"
+        >
+          <i data-lucide="folder-open" class="toolbar-icon"></i>
+        </div>
+      </div>
+      <div class="toolbar-group">
+        <select id="font-selector" class="font-dropdown" title="Font Family">
+          <option
+            value="system"
+            style="
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                sans-serif;
+            "
+          >
+            System
+          </option>
+          <option value="arial" style="font-family: Arial, sans-serif" selected>
+            Arial
+          </option>
+          <option
+            value="helvetica"
+            style="font-family: Helvetica, Arial, sans-serif"
+          >
+            Helvetica
+          </option>
+          <option
+            value="times"
+            style="font-family: 'Times New Roman', Times, serif"
+          >
+            Times New Roman
+          </option>
+          <option value="georgia" style="font-family: Georgia, serif">
+            Georgia
+          </option>
+          <option
+            value="courier"
+            style="font-family: 'Courier New', Courier, monospace"
+          >
+            Courier New
+          </option>
+          <option
+            value="monaco"
+            style="font-family: Monaco, 'Courier New', monospace"
+          >
+            Monaco
+          </option>
+          <option
+            value="verdana"
+            style="font-family: Verdana, Geneva, sans-serif"
+          >
+            Verdana
+          </option>
+          <option value="comic" style="font-family: 'Comic Sans MS', cursive">
+            Comic Sans MS
+          </option>
+          <option
+            value="impact"
+            style="font-family: Impact, Charcoal, sans-serif"
+          >
+            Impact
+          </option>
+        </select>
+        <div
+          class="icon-button"
+          id="decrease-font-button"
+          title="Decrease Font Size"
+        >
+          <i data-lucide="minus" class="toolbar-icon"></i>
+        </div>
+        <div
+          class="icon-button"
+          id="increase-font-button"
+          title="Increase Font Size"
+        >
+          <i data-lucide="plus" class="toolbar-icon"></i>
+        </div>
+        <div class="icon-button" id="bold-button" title="Bold">
+          <i data-lucide="bold" class="toolbar-icon"></i>
+        </div>
+        <div class="icon-button" id="italic-button" title="Italic">
+          <i data-lucide="italic" class="toolbar-icon"></i>
+        </div>
+        <div
+          class="icon-button"
+          id="strikethrough-button"
+          title="Strikethrough"
+        >
+          <i data-lucide="strikethrough" class="toolbar-icon"></i>
+        </div>
+      </div>
+      <div class="toolbar-group">
+        <div class="icon-button" id="text-color-button" title="Text color">
+          <i data-lucide="baseline" class="toolbar-icon"></i>
+          <input
+            type="color"
+            id="text-color-picker"
+            value="#000000"
+            title="Text color"
+          />
+        </div>
+        <div
+          class="icon-button"
+          id="background-color-button"
+          title="Cell background color"
+        >
+          <i data-lucide="paint-bucket" class="toolbar-icon"></i>
+          <input
+            type="color"
+            id="color-picker"
+            value="#ffffff"
+            title="Cell background color"
+          />
+        </div>
+      </div>
+      <div class="toolbar-group">
+        <div class="icon-button" id="sum-button" title="Auto Sum">
+          <i data-lucide="sigma" class="toolbar-icon"></i>
+        </div>
+        <div
+          class="icon-button"
+          id="quantum-button"
+          title="Toggle Quantum Uncertainty"
+        >
+          <i data-lucide="wand-sparkles" class="toolbar-icon"></i>
+        </div>
+      </div>
+      <button
+        class="toolbar-toggle"
+        id="toolbar-toggle-right"
+        title="Toggle Toolbar"
+      >
+        <i data-lucide="chevron-left" class="toolbar-icon"></i>
+      </button>
+      <div class="toolbar-content collapsed" id="toolbar-content-right">
+        <div
+          class="icon-button"
+          id="toggle-borders-button"
+          title="Toggle Cell Borders"
+        >
+          <i data-lucide="grid-3x3" class="toolbar-icon"></i>
+        </div>
+        <div
+          class="icon-button"
+          id="anaglyph-button"
+          title="Toggle Anaglyph 3D (Red-Cyan Glasses)"
+        >
+          <i data-lucide="glasses" class="toolbar-icon"></i>
+        </div>
+        <div
+          class="icon-button"
+          id="hypercube-button"
+          title="Toggle 4D Projection"
+        >
+          <i data-lucide="box" class="toolbar-icon"></i>
+        </div>
+      </div>
+    </div>
+    <div id="canvas-container"></div>
+    <input type="text" id="cell-input" />
+
+    <!-- Save Version Modal -->
+    <div class="modal-overlay" id="save-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Save Version</div>
+          <div class="modal-close" onclick="closeSaveModal()">
+            <i data-lucide="x" style="width: 20px; height: 20px"></i>
+          </div>
+        </div>
+        <div class="modal-content">
+          <input
+            type="text"
+            class="version-input"
+            id="version-name-input"
+            placeholder="Enter version name..."
+            maxlength="50"
+          />
+          <div id="existing-versions-save"></div>
+        </div>
+        <div class="modal-actions">
+          <button
+            class="modal-button modal-button-secondary"
+            onclick="closeSaveModal()"
+          >
+            Cancel
+          </button>
+          <button
+            class="modal-button modal-button-primary"
+            id="save-version-button"
+            onclick="saveVersion()"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load Version Modal -->
+    <div class="modal-overlay" id="load-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Load Version</div>
+          <div class="modal-close" onclick="closeLoadModal()">
+            <i data-lucide="x" style="width: 20px; height: 20px"></i>
+          </div>
+        </div>
+        <div class="modal-content">
+          <div class="version-list" id="version-list"></div>
+        </div>
+        <div class="modal-actions">
+          <button
+            class="modal-button modal-button-secondary"
+            onclick="closeLoadModal()"
+          >
+            Cancel
+          </button>
+          <button
+            class="modal-button modal-button-primary"
+            id="load-version-button"
+            onclick="loadSelectedVersion()"
+            disabled
+          >
+            Load
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+    <script>
+      // Initialize Lucide icons
+      document.addEventListener("DOMContentLoaded", () => {
+        lucide.createIcons();
+
+        // Toolbar toggle functionality
+        const toolbarToggle = document.getElementById("toolbar-toggle-right");
+        const toolbarContent = document.getElementById("toolbar-content-right");
+
+        toolbarToggle.addEventListener("click", () => {
+          toolbarToggle.classList.toggle("collapsed");
+          toolbarContent.classList.toggle("collapsed");
+        });
+
+        // Background color picker
+        const colorPicker = document.getElementById("color-picker");
+        const backgroundColorButton = document.getElementById(
+          "background-color-button"
+        );
+
+        // Click background icon to open color picker
+        backgroundColorButton.addEventListener("click", () => {
+          colorPicker.click();
+        });
+
+        // Text color picker
+        const textColorPicker = document.getElementById("text-color-picker");
+        const textColorButton = document.getElementById("text-color-button");
+
+        // Click text icon to open text color picker
+        textColorButton.addEventListener("click", () => {
+          textColorPicker.click();
+        });
+
+        // Sum button
+        const sumButton = document.getElementById("sum-button");
+        sumButton.addEventListener("click", () => {
+          // Trigger the autoSum function in app.js
+          if (window.autoSum) {
+            window.autoSum();
+          }
+        });
+
+        // Toggle borders button
+        const toggleBordersButton = document.getElementById(
+          "toggle-borders-button"
+        );
+        toggleBordersButton.addEventListener("click", () => {
+          if (window.toggleBorders) {
+            const isActive = window.toggleBorders();
+            // Visual feedback - change button background when active (borders hidden)
+            if (isActive) {
+              toggleBordersButton.style.background = "#1A74E8";
+              toggleBordersButton.querySelector(".toolbar-icon").style.color =
+                "#ffffff";
+            } else {
+              toggleBordersButton.style.background = "";
+              toggleBordersButton.querySelector(".toolbar-icon").style.color =
+                "#111";
+            }
+          }
+        });
+
+        // Anaglyph 3D button
+        const anaglyphButton = document.getElementById("anaglyph-button");
+        anaglyphButton.addEventListener("click", () => {
+          // Toggle anaglyph mode in app.js
+          if (window.toggleAnaglyph) {
+            const isActive = window.toggleAnaglyph();
+            // Visual feedback - change button background when active
+            if (isActive) {
+              anaglyphButton.style.background = "#1A74E8";
+              anaglyphButton.querySelector(".toolbar-icon").style.color =
+                "#ffffff";
+            } else {
+              anaglyphButton.style.background = "";
+              anaglyphButton.querySelector(".toolbar-icon").style.color =
+                "#111";
+            }
+          }
+        });
+
+        // 4D Projection button
+        const hypercubeButton = document.getElementById("hypercube-button");
+        hypercubeButton.addEventListener("click", () => {
+          if (window.toggle4D) {
+            const isActive = window.toggle4D();
+            // Visual feedback - change button background when active
+            if (isActive) {
+              hypercubeButton.style.background = "#1A74E8";
+              hypercubeButton.querySelector(".toolbar-icon").style.color =
+                "#ffffff";
+            } else {
+              hypercubeButton.style.background = "";
+              hypercubeButton.querySelector(".toolbar-icon").style.color =
+                "#111";
+            }
+          }
+        });
+
+        // Quantum Uncertainty button
+        const quantumButton = document.getElementById("quantum-button");
+        quantumButton.addEventListener("click", () => {
+          if (window.toggleQuantum) {
+            const isActive = window.toggleQuantum();
+            // Visual feedback - change button background when active
+            if (isActive) {
+              quantumButton.style.background = "#1A74E8";
+              quantumButton.querySelector(".toolbar-icon").style.color =
+                "#ffffff";
+            } else {
+              quantumButton.style.background = "";
+              quantumButton.querySelector(".toolbar-icon").style.color = "#111";
+            }
+          }
+        });
+
+        // Text formatting buttons
+        const boldButton = document.getElementById("bold-button");
+        const italicButton = document.getElementById("italic-button");
+        const strikethroughButton = document.getElementById(
+          "strikethrough-button"
+        );
+
+        boldButton.addEventListener("click", () => {
+          if (window.toggleBold) {
+            const isActive = window.toggleBold();
+            if (isActive) {
+              boldButton.style.background = "#1A74E8";
+              boldButton.querySelector(".toolbar-icon").style.color = "#ffffff";
+            } else {
+              boldButton.style.background = "";
+              boldButton.querySelector(".toolbar-icon").style.color = "#111";
+            }
+          }
+        });
+
+        italicButton.addEventListener("click", () => {
+          if (window.toggleItalic) {
+            const isActive = window.toggleItalic();
+            if (isActive) {
+              italicButton.style.background = "#1A74E8";
+              italicButton.querySelector(".toolbar-icon").style.color =
+                "#ffffff";
+            } else {
+              italicButton.style.background = "";
+              italicButton.querySelector(".toolbar-icon").style.color = "#111";
+            }
+          }
+        });
+
+        strikethroughButton.addEventListener("click", () => {
+          if (window.toggleStrikethrough) {
+            const isActive = window.toggleStrikethrough();
+            if (isActive) {
+              strikethroughButton.style.background = "#1A74E8";
+              strikethroughButton.querySelector(".toolbar-icon").style.color =
+                "#ffffff";
+            } else {
+              strikethroughButton.style.background = "";
+              strikethroughButton.querySelector(".toolbar-icon").style.color =
+                "#111";
+            }
+          }
+        });
+
+        // Save and Load buttons
+        const saveButton = document.getElementById("save-button");
+        const loadButton = document.getElementById("load-button");
+
+        saveButton.addEventListener("click", () => {
+          if (window.openSaveModal) {
+            window.openSaveModal();
+          }
+        });
+
+        loadButton.addEventListener("click", () => {
+          if (window.openLoadModal) {
+            window.openLoadModal();
+          }
+        });
+
+        // Font selector
+        const fontSelector = document.getElementById("font-selector");
+        fontSelector.addEventListener("change", (e) => {
+          if (window.setFont) {
+            window.setFont(e.target.value);
+          }
+        });
+
+        // Font size buttons
+        const decreaseFontButton = document.getElementById(
+          "decrease-font-button"
+        );
+        const increaseFontButton = document.getElementById(
+          "increase-font-button"
+        );
+
+        decreaseFontButton.addEventListener("click", () => {
+          if (window.decreaseFontSize) {
+            window.decreaseFontSize();
+          }
+        });
+
+        increaseFontButton.addEventListener("click", () => {
+          if (window.increaseFontSize) {
+            window.increaseFontSize();
+          }
+        });
+      });
+
+      // Version Management Functions
+      let selectedVersionForLoad = null;
+
+      function openSaveModal() {
+        const modal = document.getElementById("save-modal");
+        modal.classList.add("active");
+
+        // Clear input
+        document.getElementById("version-name-input").value = "";
+        document.getElementById("version-name-input").focus();
+
+        // Show existing versions
+        updateExistingVersionsList();
+
+        // Re-initialize Lucide icons for the modal
+        lucide.createIcons();
+      }
+
+      function closeSaveModal() {
+        const modal = document.getElementById("save-modal");
+        modal.classList.remove("active");
+      }
+
+      function openLoadModal() {
+        const modal = document.getElementById("load-modal");
+        modal.classList.add("active");
+        selectedVersionForLoad = null;
+
+        // Update version list
+        updateVersionList();
+
+        // Disable load button initially
+        document.getElementById("load-version-button").disabled = true;
+
+        // Re-initialize Lucide icons for the modal
+        lucide.createIcons();
+      }
+
+      function closeLoadModal() {
+        const modal = document.getElementById("load-modal");
+        modal.classList.remove("active");
+        selectedVersionForLoad = null;
+      }
+
+      function updateExistingVersionsList() {
+        const container = document.getElementById("existing-versions-save");
+        const versions = window.getSavedVersions
+          ? window.getSavedVersions()
+          : [];
+
+        if (versions.length === 0) {
+          container.innerHTML =
+            '<div style="padding: 12px; color: #666; font-size: 14px;">No saved versions yet</div>';
+        } else {
+          container.innerHTML =
+            '<div style="margin-bottom: 8px; font-weight: 600; color: #111; font-size: 14px;">Existing versions (click to overwrite):</div>';
+          const list = document.createElement("div");
+          list.className = "version-list";
+          list.style.maxHeight = "150px";
+
+          versions.forEach((version) => {
+            const item = document.createElement("div");
+            item.className = "version-item";
+            item.innerHTML = `
+              <div class="version-info">
+                <div class="version-name">${version.name}</div>
+                <div class="version-date">${new Date(
+                  version.timestamp
+                ).toLocaleString()}</div>
+              </div>
+            `;
+            item.onclick = () => {
+              document.getElementById("version-name-input").value =
+                version.name;
+            };
+            list.appendChild(item);
+          });
+
+          container.appendChild(list);
+        }
+      }
+
+      function updateVersionList() {
+        const container = document.getElementById("version-list");
+        const versions = window.getSavedVersions
+          ? window.getSavedVersions()
+          : [];
+
+        if (versions.length === 0) {
+          container.innerHTML =
+            '<div class="empty-state">No saved versions found.<br/>Save your current work to create a version.</div>';
+        } else {
+          container.innerHTML = "";
+
+          versions.forEach((version) => {
+            const item = document.createElement("div");
+            item.className = "version-item";
+            item.setAttribute("data-version-name", version.name);
+
+            item.innerHTML = `
+              <div class="version-info">
+                <div class="version-name">${version.name}</div>
+                <div class="version-date">${new Date(
+                  version.timestamp
+                ).toLocaleString()}</div>
+              </div>
+              <div class="version-actions">
+                <button class="version-delete" onclick="deleteVersion('${version.name.replace(
+                  /'/g,
+                  "\\'"
+                )}', event)">Delete</button>
+              </div>
+            `;
+
+            item.onclick = (e) => {
+              if (e.target.classList.contains("version-delete")) return;
+
+              // Remove selection from all items
+              document
+                .querySelectorAll(".version-item")
+                .forEach((i) => i.classList.remove("selected"));
+
+              // Select this item
+              item.classList.add("selected");
+              selectedVersionForLoad = version.name;
+
+              // Enable load button
+              document.getElementById("load-version-button").disabled = false;
+            };
+
+            container.appendChild(item);
+          });
+        }
+      }
+
+      function saveVersion() {
+        const versionName = document
+          .getElementById("version-name-input")
+          .value.trim();
+
+        if (!versionName) {
+          alert("Please enter a version name");
+          return;
+        }
+
+        if (window.saveVersionToLocalStorage) {
+          const success = window.saveVersionToLocalStorage(versionName);
+          if (success) {
+            closeSaveModal();
+
+            // Visual feedback
+            const saveButton = document.getElementById("save-button");
+            saveButton.style.background = "#4CAF50";
+            saveButton.querySelector(".toolbar-icon").style.color = "#ffffff";
+            setTimeout(() => {
+              saveButton.style.background = "";
+              saveButton.querySelector(".toolbar-icon").style.color = "#111";
+            }, 500);
+          }
+        }
+      }
+
+      function loadSelectedVersion() {
+        if (!selectedVersionForLoad) return;
+
+        if (window.loadVersionFromLocalStorage) {
+          const success = window.loadVersionFromLocalStorage(
+            selectedVersionForLoad
+          );
+          if (success) {
+            closeLoadModal();
+
+            // Visual feedback
+            const loadButton = document.getElementById("load-button");
+            loadButton.style.background = "#1A74E8";
+            loadButton.querySelector(".toolbar-icon").style.color = "#ffffff";
+            setTimeout(() => {
+              loadButton.style.background = "";
+              loadButton.querySelector(".toolbar-icon").style.color = "#111";
+            }, 500);
+          }
+        }
+      }
+
+      function deleteVersion(versionName, event) {
+        event.stopPropagation();
+
+        if (
+          confirm(`Are you sure you want to delete version "${versionName}"?`)
+        ) {
+          if (window.deleteVersionFromLocalStorage) {
+            window.deleteVersionFromLocalStorage(versionName);
+            updateVersionList();
+
+            // Clear selection if deleted version was selected
+            if (selectedVersionForLoad === versionName) {
+              selectedVersionForLoad = null;
+              document.getElementById("load-version-button").disabled = true;
+            }
+          }
+        }
+      }
+
+      // Handle Enter key in version name input
+      document.addEventListener("DOMContentLoaded", () => {
+        const versionInput = document.getElementById("version-name-input");
+        versionInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            saveVersion();
+          }
+        });
+
+        // Close modals on overlay click
+        document.getElementById("save-modal").addEventListener("click", (e) => {
+          if (e.target.id === "save-modal") {
+            closeSaveModal();
+          }
+        });
+
+        document.getElementById("load-modal").addEventListener("click", (e) => {
+          if (e.target.id === "load-modal") {
+            closeLoadModal();
+          }
+        });
+      });
+
+      // Expose modal functions to window
+      window.openSaveModal = openSaveModal;
+      window.closeSaveModal = closeSaveModal;
+      window.openLoadModal = openLoadModal;
+      window.closeLoadModal = closeLoadModal;
+      window.saveVersion = saveVersion;
+      window.loadSelectedVersion = loadSelectedVersion;
+      window.deleteVersion = deleteVersion;
+    </script>
+  </body>
+</html>
