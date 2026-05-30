@@ -1,7 +1,7 @@
 {
-  "name": "3d-excel",
-  "version": "1.0.0",
-  "description": "Isometric WebGL 3D Excel Spreadsheet",
+  "name": "spreedy",
+  "version": "0.1.0",
+  "description": "Rudimentary 3D Spreadsheet Application",
   "type": "module",
   "scripts": {
     "dev": "vite",
