@@ -50,7 +50,7 @@ let lastTouches = [];
 let isPanning = false;
 let previousPanPosition = { x: 0, y: 0 };
 
-// Anaglyph 3D state
+// Anaglyph state
 let isAnaglyphMode = false;
 let anaglyphEffect = null;
 let perspectiveCamera = null;
@@ -321,6 +321,24 @@ function columnToLetter(index) {
 
 function toRomanNumeral(num) {
   const romanNumerals = [
+    //{ value: 500000, symbol: "Q" },
+    //{ value: 400000, symbol: "ↈQ" },
+    //{ value: 100000, symbol: "ↈ" },
+    //{ value: 90000, symbol: "ↂↈ" },
+    //{ value: 50000, symbol: "ↇ" },
+    //{ value: 40000, symbol: "ↂↇ" },
+    //{ value: 10000, symbol: "ↂ" },
+    //{ value: 9000, symbol: "ↀↂ" },
+    //{ value: 5000, symbol: "ↁ" },
+    //{ value: 4000, symbol: "ↀↁ" },
+    { value: 1000, symbol: "M" }, // ↀ
+    { value: 900, symbol: "CM" }, // Cↀ
+    { value: 500, symbol: "D" },
+    { value: 400, symbol: "CD" },
+    { value: 100, symbol: "C" },
+    { value: 90, symbol: "XC" },
+    { value: 50, symbol: "L" },
+    { value: 40, symbol: "XL" },
     { value: 10, symbol: "X" },
     { value: 9, symbol: "IX" },
     { value: 5, symbol: "V" },
@@ -1739,7 +1757,7 @@ function animate() {
   }
 }
 
-// Toggle Anaglyph 3D mode
+// Toggle 3D Anaglyph
 function toggleAnaglyph() {
   isAnaglyphMode = !isAnaglyphMode;
 
